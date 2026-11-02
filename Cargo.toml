@@ -1,0 +1,43 @@
+[package]
+name = "agent-creds"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Agent Credentials: a local credential broker with browser cookie capture and OAuth"
+license = "Apache-2.0"
+
+[dependencies]
+anyhow = "1"
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+directories = "6"
+dotenvy = "0.15"
+fs2 = "0.4"
+rand = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+subtle = "2"
+tempfile = "3"
+tiny_http = "0.12"
+tungstenite = "0.26"
+url = "2"
+webbrowser = "1"
+zeroize = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Security_Cryptography", "Win32_Foundation"] }
+
+[target.'cfg(not(windows))'.dependencies]
+aes-gcm = "0.10"
+keyring = { version = "3.6", features = ["apple-native", "sync-secret-service", "crypto-rust"] }
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+
+[profile.release]
+lto = "thin"
+strip = true

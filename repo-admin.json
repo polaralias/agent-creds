@@ -1,4 +1,7 @@
 {
+  "repositoryName": "Agent Credentials",
+  "commandName": "agent-creds",
+  "localOnly": true,
   "repoType": "cli",
   "license": "Apache-2.0",
   "summary": "WIP: Local credential broker for agents with cookie capture and OAuth replay",
