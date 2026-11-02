@@ -1,0 +1,16 @@
+{
+  "repoType": "cli",
+  "license": "Apache-2.0",
+  "summary": "WIP: Local credential broker for agents with cookie capture and OAuth replay",
+  "descriptionWip": true,
+  "enforcePrs": true,
+  "releaseProfile": null,
+  "codeOwners": [
+    "@polaralias"
+  ],
+  "rulesetName": "Protect default branch",
+  "requiredApprovals": 1,
+  "requireCodeOwnerReview": true,
+  "requireReviewThreadResolution": true,
+  "organizationAdminBypass": false
+}
