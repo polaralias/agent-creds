@@ -2,11 +2,11 @@
 
 `agent-creds` is a local credential broker written in Rust. Import credentials from files, collect a named browser cookie, or authorize a generic OAuth client, then inject the credential into a child process. Normal CLI output contains metadata only.
 
-This is a new, source-informed implementation. It is not a line-by-line port or a formally isolated clean room implementation. No code, service endpoints, platform cookie conventions or AWS integration were copied from the workplace tool. The original repository is never modified. This repository is local only; no remote is configured.
+Agent Credentials provides provider-neutral credential storage, cookie capture and local OAuth. This repository is local only; no remote is configured.
 
 ## Build and install
 
-Requires Rust 1.85 or later and platform build tools. Windows uses native DPAPI, macOS uses Keychain-backed encryption, and Linux requires an available Secret Service keyring. There is no plaintext fallback. Windows is the development and runtime verification platform; macOS and Linux need native qualification before relying on them.
+Requires Rust 1.85 or later and platform build tools. Windows uses native DPAPI, macOS uses Keychain-backed encryption, and Linux requires an available Secret Service keyring. There is no plaintext fallback. Windows and Ubuntu 24.04 under WSL2 are verified. macOS and other Linux environments still require native qualification. See [Linux and WSL setup](docs/linux.md) for keyring prerequisites and repeatable checks.
 
 ```powershell
 cargo build --locked --release

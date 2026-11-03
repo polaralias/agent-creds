@@ -30,4 +30,4 @@ Authorization code flow uses PKCE S256 and random one-use state. The listener bi
 
 Local token replay intentionally contacts the endpoint configured by the user. The encrypted configuration is the source of that destination; there is no discovery or endpoint selection from provider response text. Protect the OAuth client configuration like a credential. Native-client secrets are not considered confidential from other programs on the same machine. ID tokens are ignored; this is not an OpenID Connect identity verifier.
 
-All development integration endpoints are loopback fixtures. No workplace platform, AWS SSO or company identity endpoint is part of this implementation or its tests.
+All development integration endpoints are synthetic loopback fixtures. Tests do not contact remote identity providers or application services.
