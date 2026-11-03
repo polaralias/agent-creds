@@ -41,4 +41,4 @@ The Publish Release workflow:
 
 Artifacts are agent-creds-X.Y.Z-x86_64-pc-windows-msvc.zip and agent-creds-X.Y.Z-x86_64-unknown-linux-gnu.tar.gz, each with a .sha256 file. Linux builds target Ubuntu 24.04's glibc environment and require a Secret Service runtime; they are not a claim of static or universal Linux compatibility. No crates.io publication is configured.
 
-Source packaging uses the Cargo include list and excludes local vault data, notes, caches, logs and built artifacts. See [verification](verification.md) and [security](security.md) for platform evidence and trust boundaries.
+Source packaging uses root-anchored Cargo include patterns and excludes local vault data, notes, caches, logs and built artifacts. CI checks Cargo's actual file list while ignored README and docs fixtures exist, so nested helper documentation cannot leak into the source package. Run `python scripts/check_package.py` locally to repeat that boundary check. See [verification](verification.md) and [security](security.md) for platform evidence and trust boundaries.
