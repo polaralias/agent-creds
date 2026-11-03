@@ -3,8 +3,11 @@ name = "agent-creds"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-description = "Agent Credentials: a local credential broker with browser cookie capture and OAuth"
+description = "agent-creds: a local credential broker with browser cookie capture and OAuth"
 license = "Apache-2.0"
+repository = "https://github.com/polaralias/agent-creds"
+authors = ["James Whelan / Polaralias"]
+include = ["src/**", "build.rs", "Cargo.toml", "Cargo.lock", "VERSION", "LICENSE", "NOTICE", "README.md", "docs/**"]
 
 [dependencies]
 anyhow = "1"

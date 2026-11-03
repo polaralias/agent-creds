@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**', 'chore/**', 'test/**', 'docs/**']
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check version and version updater
+        run: |
+          python scripts/version.py --check
+          python -m unittest discover -s scripts -p "test_*.py" -v
+      - name: Select pinned Rust toolchain
+        run: rustup show
+      - name: Install Linux test prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libdbus-1-dev pkg-config gnome-keyring dbus-x11 xvfb
+          test -x /usr/bin/google-chrome
+      - name: Verify Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/check.ps1
+      - name: Verify Linux with native keyring and browser
+        if: runner.os == 'Linux'
+        run: bash scripts/ci-linux.sh
+      - name: Verify Cargo source package
+        run: cargo package --locked --allow-dirty
+
+  release-gate:
+    name: release-gate
+    if: ${{ always() }}
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require all platform checks
+        env:
+          RESULT: ${{ needs.test.result }}
+        run: test "$RESULT" = success

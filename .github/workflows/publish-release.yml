@@ -1,0 +1,103 @@
+name: Publish Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  identity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.identity.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Verify immutable version identity and main ancestry
+        id: identity
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python scripts/version.py --check --tag "$RELEASE_TAG"
+          git merge-base --is-ancestor HEAD origin/main
+          printf 'tag=%s\n' "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: [verify, identity]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            binary: target/release/agent-creds
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary: target/release/agent-creds.exe
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install Linux build prerequisites
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y libdbus-1-dev pkg-config
+      - run: cargo build --locked --release
+      - name: Package tested executable and notices
+        run: python scripts/package_release.py --binary "${{ matrix.binary }}" --target "${{ matrix.target }}"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: [identity, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      # This write-capable job consumes artifacts and never checks out or executes source.
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
+      - name: Verify checksums and publish the version release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.identity.outputs.tag }}
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum --check ./*.sha256)
+          if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft > release-state.txt; then
+            if [ "$(cat release-state.txt)" != true ]; then
+              echo 'Release is already published; refusing to replace published assets.' >&2
+              exit 1
+            fi
+            gh release upload "$RELEASE_TAG" dist/* --clobber
+            gh release edit "$RELEASE_TAG" --draft=false --latest --verify-tag --title "$RELEASE_TAG"
+          else
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --latest --title "$RELEASE_TAG"
+          fi

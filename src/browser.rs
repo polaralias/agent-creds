@@ -109,8 +109,8 @@ impl Cdp {
         let (mut socket, _) = tungstenite::connect(endpoint)
             .map_err(|_| anyhow::anyhow!("cannot connect to owned browser"))?;
         if let MaybeTlsStream::Plain(stream) = socket.get_mut() {
-            stream.set_read_timeout(Some(Duration::from_secs(2)))?;
-            stream.set_write_timeout(Some(Duration::from_secs(2)))?;
+            stream.set_read_timeout(Some(Duration::from_millis(100)))?;
+            stream.set_write_timeout(Some(Duration::from_secs(15)))?;
         }
         Ok(Self { socket, next_id: 0 })
     }
@@ -124,12 +124,22 @@ impl Cdp {
         self.socket
             .send(Message::Text(request.to_string().into()))
             .map_err(|_| anyhow::anyhow!("browser connection lost"))?;
-        let deadline = Instant::now() + Duration::from_secs(5);
+        let deadline = Instant::now() + Duration::from_secs(15);
         while Instant::now() < deadline {
-            let message = self
-                .socket
-                .read()
-                .map_err(|_| anyhow::anyhow!("browser closed or stopped responding"))?;
+            let message = match self.socket.read() {
+                Ok(message) => message,
+                Err(tungstenite::Error::Io(error))
+                    if matches!(
+                        error.kind(),
+                        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                    ) =>
+                {
+                    // A short socket timeout is a scheduling delay, not a lost
+                    // browser. Keep polling until this operation's deadline.
+                    continue;
+                }
+                Err(_) => bail!("browser closed or stopped responding"),
+            };
             if let Message::Text(text) = message {
                 let response: Value = serde_json::from_str(&text)
                     .map_err(|_| anyhow::anyhow!("invalid browser response"))?;
@@ -149,7 +159,7 @@ impl Cdp {
 
 pub fn overlay(name: &str, target: &str) -> String {
     let label = serde_json::to_string(&format!(
-        "Agent Credentials · waiting for cookie {name} at {target} · log in normally"
+        "agent-creds · waiting for cookie {name} at {target} · log in normally"
     ))
     .unwrap();
     // Build text nodes, never HTML. Shadow DOM prevents the site's broad selectors
@@ -170,7 +180,7 @@ pub fn overlay(name: &str, target: &str) -> String {
           text.style.cssText = 'all:initial;display:block;background:white;color:black;border:2px solid black;padding:10px 14px;font:14px/1.5 system-ui;pointer-events:none;';
           root.append(text); document.documentElement.append(host);
         }}
-        if (!document.title.startsWith('Agent Credentials — ')) document.title = 'Agent Credentials — ' + document.title;
+        if (!document.title.startsWith('agent-creds — ')) document.title = 'agent-creds — ' + document.title;
       }};
       paint(); setInterval(paint, 400);
     }})()"#
@@ -366,6 +376,31 @@ pub fn scrape(options: &Options<'_>) -> Result<Capture> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn delayed_browser_response_survives_short_socket_timeouts() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let endpoint = format!("ws://{}", listener.local_addr().unwrap());
+        let server = thread::spawn(move || {
+            let (stream, _) = listener.accept().unwrap();
+            let mut socket = tungstenite::accept(stream).unwrap();
+            let request = socket.read().unwrap().into_text().unwrap();
+            let request: Value = serde_json::from_str(&request).unwrap();
+            thread::sleep(Duration::from_millis(350));
+            socket
+                .send(Message::Text(
+                    json!({"id":request["id"],"result":{"ok":true}})
+                        .to_string()
+                        .into(),
+                ))
+                .unwrap();
+        });
+        let response = Cdp::connect(&endpoint)
+            .unwrap()
+            .call("Fixture.delay", json!({}), None)
+            .unwrap();
+        assert_eq!(response["ok"], true);
+        server.join().unwrap();
+    }
     #[test]
     fn only_requested_cookie_is_captured_and_ambiguity_is_rejected() {
         let cookies = json!([{"name":"tracking","value":"excluded","expires":-1},{"name":"session","value":"wanted","expires":-1}]);

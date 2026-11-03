@@ -28,7 +28,7 @@ fn captures_httponly_cookie_after_inert_overlay_appears() {
                     <style>div {color:red!important; background:black!important; opacity:0!important}</style>
                     <script>const wait = setInterval(async () => {
                       const h = document.getElementById('__agent_credentials_notice');
-                      if (!h || !document.title.startsWith('Agent Credentials — ')) return;
+                      if (!h || !document.title.startsWith('agent-creds — ')) return;
                       const style = getComputedStyle(h);
                       if (style.pointerEvents !== 'none' || style.opacity !== '1') return;
                       clearInterval(wait); await fetch('/overlay-ok'); await fetch('/set');
@@ -101,6 +101,6 @@ fn wrong_path_cookie_times_out_and_no_banner_is_honoured() {
         Ok(_) => panic!("wrong-path cookie captured"),
         Err(error) => error.to_string(),
     };
-    assert!(error.contains("timed out"));
+    assert!(error.contains("timed out"), "unexpected capture error: {error}");
     assert!(clean.load(Ordering::Relaxed));
 }

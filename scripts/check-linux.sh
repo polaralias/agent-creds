@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+python3 scripts/version.py --check
 
 # Start this script inside an unlocked Secret Service session, for example:
 # dbus-run-session -- bash -c 'gnome-keyring-daemon --unlock --components=secrets; bash scripts/check-linux.sh'
@@ -10,5 +11,5 @@ cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked
 cargo test --locked --test cli_linux -- --ignored
 if [[ "${AGENT_CREDS_TEST_BROWSER:-0}" == 1 ]]; then
-    cargo test --locked --test browser_local -- --ignored
+    cargo test --locked --test browser_local -- --ignored --test-threads=1
 fi

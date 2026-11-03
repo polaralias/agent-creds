@@ -1,5 +1,7 @@
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path -Parent $PSScriptRoot)
+python scripts/version.py --check
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $cargoPath = Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe'
 if (-not (Test-Path -LiteralPath $cargoPath)) { $cargoPath = 'cargo' }
 & $cargoPath fmt --check

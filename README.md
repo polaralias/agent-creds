@@ -1,8 +1,8 @@
-# Agent Credentials
+# agent-creds
 
 `agent-creds` is a local credential broker written in Rust. Import credentials from files, collect a named browser cookie, or authorize a generic OAuth client, then inject the credential into a child process. Normal CLI output contains metadata only.
 
-Agent Credentials provides provider-neutral credential storage, cookie capture and local OAuth. This repository is local only; no remote is configured.
+agent-creds provides provider-neutral credential storage, cookie capture and local OAuth. Source and development are hosted at [polaralias/agent-creds](https://github.com/polaralias/agent-creds).
 
 ## Build and install
 
@@ -29,7 +29,7 @@ agent-creds list
 agent-creds rm service-token
 ```
 
-`store` removes the input file after the encrypted record is safely saved. Add `--keep` to retain it. A single final newline is removed; other whitespace is preserved. Overwrites require `--replace`. Expiry accepts `30m`, `12h`, `7d`, seconds, or an RFC3339 timestamp. Expired credentials are refused before the child starts.
+`store` removes the input file after the encrypted record is safely saved. Add `--keep` to retain it. A single final newline is removed; other whitespace is preserved. Overwrites require `--replace`. Omit `--expires` to store a secret without a local expiry deadline; `exec` will not impose a TTL on it. Expiry accepts `30m`, `12h`, `7d`, seconds, or an RFC3339 timestamp. Expired credentials are refused before the child starts.
 
 `exec one,two -- program arguments...` forwards arguments directly, without shell expansion, and propagates the child's exit code. The `--` separator is recommended and optional. Credential names map to uppercase environment names with hyphens replaced by underscores, or you can set `--env`. Duplicate destination variables are rejected. There is deliberately no `get` command or expired-credential override.
 
@@ -40,7 +40,7 @@ agent-creds cookie-scrape web-session --url https://app.example.com/ --cookie se
 agent-creds cookie-scrape web-header --url https://app.example.com/api/ --cookie session_id --header --env COOKIE_HEADER
 ```
 
-The browser starts with a fresh temporary profile. Log in normally. An inert bottom overlay and window-title prefix identify Agent Credentials. The overlay survives navigation and is added to new tabs. It never requests input or handles clicks. `--no-banner` disables both markers.
+The browser starts with a fresh temporary profile. Log in normally. An inert bottom overlay and window-title prefix identify agent-creds. The overlay survives navigation and is added to new tabs. It never requests input or handles clicks. `--no-banner` disables both markers.
 
 Capture waits until a tab is on the target origin and the named cookie exists for the exact target URL, using the browser's domain, path and secure-cookie matching. HttpOnly cookies work. Only that cookie's value is stored; `--header` stores `name=value`. Other cookies are not stored. Same-name ambiguity is refused rather than guessing. Specify the actual resource URL when paths matter. A matching cookie's presence is the completion condition; the tool cannot know whether it represents the intended account or a completed application login.
 
@@ -103,4 +103,4 @@ Windows encrypts each payload directly with current-user DPAPI through native FF
 
 Read [the threat model](docs/security.md), [the design and acceptance matrix](docs/design.md) and [verification notes](docs/verification.md) before deployment. Source removal overwrites then unlinks; it cannot guarantee forensic erasure on SSDs, backups or journalling filesystems. This is a local development tool, not yet an independently audited credential boundary.
 
-Licensed under Apache-2.0. No remote repository, publication or release has been created.
+Licensed under Apache-2.0. See [release and versioning guidance](docs/releases.md).

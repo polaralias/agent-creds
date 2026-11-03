@@ -185,7 +185,7 @@ pub fn login_with(
                 respond(
                     request,
                     200,
-                    "Agent Credentials: authorization received. You may close this tab.",
+                    "agent-creds: authorization received. You may close this tab.",
                 );
                 return exchange(
                     config,
@@ -201,13 +201,13 @@ pub fn login_with(
             Ok(None) => respond(
                 request,
                 400,
-                "No matching Agent Credentials authorization request.",
+                "No matching agent-creds authorization request.",
             ),
             Err(error) => {
                 respond(
                     request,
                     400,
-                    "Agent Credentials: authorization failed. Return to the terminal.",
+                    "agent-creds: authorization failed. Return to the terminal.",
                 );
                 return Err(error);
             }

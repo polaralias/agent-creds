@@ -133,6 +133,7 @@ mod tests {
     use super::*;
     #[test]
     fn unsafe_identifiers_and_expiries_are_rejected() {
+        assert!(expiry(None).unwrap().is_none());
         for name in ["../escape", "a/b", "", "a.b", "a\\b"] {
             assert!(valid_name(name).is_err());
         }

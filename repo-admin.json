@@ -1,13 +1,13 @@
 {
-  "repositoryName": "Agent Credentials",
+  "repositoryName": "agent-creds",
   "commandName": "agent-creds",
-  "localOnly": true,
+  "localOnly": false,
   "repoType": "cli",
   "license": "Apache-2.0",
   "summary": "WIP: Local credential broker for agents with cookie capture and OAuth replay",
   "descriptionWip": true,
   "enforcePrs": true,
-  "releaseProfile": null,
+  "releaseProfile": "generic",
   "codeOwners": [
     "@polaralias"
   ],
@@ -15,5 +15,15 @@
   "requiredApprovals": 1,
   "requireCodeOwnerReview": true,
   "requireReviewThreadResolution": true,
-  "organizationAdminBypass": false
+  "organizationAdminBypass": false,
+  "versionSource": "VERSION",
+  "releaseWorkflow": ".github/workflows/publish-release.yml",
+  "repositoryAdminBypass": true,
+  "requiredStatusChecks": [
+    "release-gate"
+  ],
+  "allowedMergeMethods": [
+    "squash"
+  ],
+  "tagRulesetName": "Protect version tags"
 }

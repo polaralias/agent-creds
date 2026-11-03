@@ -22,7 +22,7 @@ use zeroize::Zeroizing;
 #[command(
     name = "agent-creds",
     version,
-    about = "Agent Credentials — keep credentials out of routine agent context"
+    about = "agent-creds — keep credentials out of routine agent context"
 )]
 pub struct Cli {
     /// Isolated vault directory; defaults to the OS local application data directory.
@@ -289,7 +289,7 @@ pub fn run(cli: Cli) -> Result<i32> {
                 .context("cannot create template; output must not already exist")?;
             writeln!(
                 file,
-                "# Agent Credentials — blank values only\n# Fill locally, then: agent-creds import-env <file> --shred-source"
+                "# agent-creds — blank values only\n# Fill locally, then: agent-creds import-env <file> --shred-source"
             )?;
             let mut envs = HashSet::new();
             for record in records {

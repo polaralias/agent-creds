@@ -1,6 +1,6 @@
 # Security model
 
-Agent Credentials reduces accidental disclosure through argv, shell history, plaintext credential files and routine broker output. It protects stored payloads using the OS account's protection facility, and exposes selected credentials to a child process for its lifetime.
+agent-creds reduces accidental disclosure through argv, shell history, plaintext credential files and routine broker output. It protects stored payloads using the OS account's protection facility, and exposes selected credentials to a child process for its lifetime.
 
 ## Authority boundary
 
