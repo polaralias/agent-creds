@@ -101,6 +101,9 @@ fn wrong_path_cookie_times_out_and_no_banner_is_honoured() {
         Ok(_) => panic!("wrong-path cookie captured"),
         Err(error) => error.to_string(),
     };
-    assert!(error.contains("timed out"), "unexpected capture error: {error}");
+    assert!(
+        error.contains("timed out"),
+        "unexpected capture error: {error}"
+    );
     assert!(clean.load(Ordering::Relaxed));
 }
